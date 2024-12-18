@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_type_prediction');
             $table->string('tagName', 45);
             $table->double('probability');
-            $table->foreign('id_type_prediction')->references('id_type_prediction')->on('type_prediction')->onDelete('no action')->onUpdate('no action');
+            $table->foreign('id_type_prediction')->references('id_type_prediction')->on('type_predictions')->onDelete('no action')->onUpdate('no action');
         });
     }
 
