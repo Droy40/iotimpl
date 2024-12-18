@@ -14,4 +14,8 @@ class Photo extends Model
     {
         return $this->hasOne(TypePrediction::class, 'idphotos');
     }
+    public function qualityPrediction()
+    {
+        return $this->hasOne(QualityPrediction::class, 'idphotos');
+    }
 }
