@@ -10,4 +10,8 @@ class Photo extends Model
     protected $primaryKey = 'idphotos';
     protected $fillable = ['location'];
 
+    public function typePrediction()
+    {
+        return $this->hasOne(TypePrediction::class, 'idphotos');
+    }
 }
