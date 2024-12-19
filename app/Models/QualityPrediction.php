@@ -15,7 +15,8 @@ class QualityPrediction extends Model
     {
         return $this->belongsTo(Photo::class, 'idphotos','idphotos');
     }
-    public function detail(){
+    public function detail()
+    {
         return $this->hasMany(QualityPredictionDetail::class, 'id_quality_prediction','id_quality_prediction');
     }
 

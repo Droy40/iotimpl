@@ -11,7 +11,7 @@ class TypePredictionDetail extends Model
     protected $fillable = ['id_type_prediction', 'tagName', 'probability'];
     public $timestamps = false;
 
-    public function typePrediction()
+    public function type()
     {
         return $this->belongsTo(TypePrediction::class, 'id_type_prediction','id_type_prediction');
     }
