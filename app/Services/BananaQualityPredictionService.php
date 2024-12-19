@@ -13,7 +13,7 @@ class BananaQualityPredictionService
             'Prediction-Key' => env('CUSTOM_VISIONS_BANANA_QUALITY_KEY'),
             'Content-Type' => 'application/octet-stream',
         ])->withBody($fileContent, 'application/octet-stream')
-            ->post(env('CUSTOM_VISIONS_TYPE_PREDICTION_URL'));
+            ->post(env('CUSTOM_VISIONS_BANANA_QUALITY_URL'));
 
         if ($response->successful()) {
             return $response->json();
