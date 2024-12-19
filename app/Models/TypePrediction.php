@@ -9,6 +9,7 @@ class TypePrediction extends Model
     protected $table = 'type_predictions';
     protected $primaryKey = 'id_type_prediction';
     protected $fillable = ['idphotos', 'created'];
+    public $timestamps = false;
 
     public function photo()
     {
