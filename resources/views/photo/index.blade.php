@@ -1,38 +1,25 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bootstrap demo</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-</head>
-<body>
-    <div class="card-group">
-        <div class="card" style="width: 18rem;">
-            <img src="..." class="card-img-top" alt="...">
-            <div class="card-body">
-                <h5 class="card-title">Card title</h5>
-                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+@extends('layout.layout')
+
+@section('content')
+<div class="container mt-5">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+        @foreach($photos as $photo)
+            <div class="col" >
+                <div class="card h-100">
+                    <img src={{$photo->location}} class="card-img-top" alt="Card Image">
+                    <div class="card-body">
+                        <h5 class="card-title">{{$photo->typePrediction->created}}</h5>
+                        <h5 class="card-text">{{$photo->typePrediction->detail->first()->tagName . " " .number_format((float)$photo->typePrediction->detail->first()->probability * 100, 2, '.', '') . "%"}}</h5>
+                    </div>
+                    <div class="card-footer">
+                        @foreach($photo->qualityPrediction->detail as $predict)
+                            <h5 class="card-title">{{$predict->tagName}}</h5>
+                            <p class="card-text">{{number_format((float)$predict->probability * 100, 2, '.', '') . "%"}}</p>
+                        @endforeach
+                    </div>
+                </div>
             </div>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item">An item</li>
-                <li class="list-group-item">A second item</li>
-                <li class="list-group-item">A third item</li>
-            </ul>
-        </div>
-        <div class="card" style="width: 18rem;">
-            <img src="..." class="card-img-top" alt="...">
-            <div class="card-body">
-                <h5 class="card-title">Card title</h5>
-                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-            </div>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item">An item</li>
-                <li class="list-group-item">A second item</li>
-                <li class="list-group-item">A third item</li>
-            </ul>
-        </div>
+        @endforeach
     </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-</body>
-</html>
+</div>
+@endsection

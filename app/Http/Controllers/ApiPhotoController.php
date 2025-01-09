@@ -98,6 +98,7 @@ class ApiPhotoController extends Controller
             return response()->json([
                 'message' => 'Successfully predicted the image!',
                 'result' => [
+                    'idphotos'=>$photo->idphotos,
                     'type'=> $highestTypePrediction->tagName,
                     'probability' => $highestTypePrediction->probability,
                     'quality' => array_map(function ($prediction)

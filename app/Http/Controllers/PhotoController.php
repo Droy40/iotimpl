@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Photo;
+use App\Models\QualityPredictionDetail;
+use App\Models\QualityPrediction;
 use Illuminate\Http\Request;
 
 class PhotoController extends Controller
@@ -11,7 +14,8 @@ class PhotoController extends Controller
      */
     public function index()
     {
-        return view('photo.index');
+        $photos = Photo::all();
+        return view('photo.index', compact( 'photos'));
     }
 
     /**
@@ -19,15 +23,7 @@ class PhotoController extends Controller
      */
     public function create()
     {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
+        return view('photo.create');
     }
 
     /**
@@ -35,30 +31,9 @@ class PhotoController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $photo = Photo::findOrFail($id);
+        // Tampilkan data ke view
+        return view('photo.show', compact('photo'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
 }
