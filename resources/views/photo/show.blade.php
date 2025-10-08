@@ -11,6 +11,10 @@
             <p class="card-text">Uploaded At: {{ $photo->created_at->format('d M Y H:i') }}</p>
         </div>
         <div class="card-footer">
+            @foreach($photo->qualityPrediction->detail as $predict)
+                <h5 class="card-title">{{$predict->tagName}}</h5>
+                <p class="card-text">{{number_format((float)$predict->probability * 100, 2, '.', '') . "%"}}</p>
+            @endforeach
             <a href="{{ route('photo.index') }}" class="btn btn-primary">Back to Photos</a>
         </div>
     </div>
