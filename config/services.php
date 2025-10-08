@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Third Party Services
@@ -35,4 +34,10 @@ return [
         ],
     ],
 
+    'custom_vision' => [
+        // The prediction endpoint (URL) for your Custom Vision resource
+        'prediction_url' => env('CUSTOM_VISIONS_PREDICTION_URL'),
+        // The prediction key used as the 'Prediction-Key' header
+        'prediction_key' => env('CUSTOM_VISIONS_PREDICTION_KEY'),
+    ],
 ];

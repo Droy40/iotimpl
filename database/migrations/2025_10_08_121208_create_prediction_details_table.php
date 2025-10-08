@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('quality_prediction_details', function (Blueprint $table) {
-            $table->id('id_quality_prediction_detail');
-            $table->unsignedBigInteger('id_quality_prediction');
+        Schema::create('prediction_details', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('prediction_id');
             $table->string('tagName', 45);
             $table->double('probability');
-            $table->foreign('id_quality_prediction')->references('id_quality_prediction')->on('quality_predictions')->onDelete('no action')->onUpdate('no action');
-
+            $table->foreign('prediction_id')->references('id')->on('predictions')->onDelete('no action')->onUpdate('no action');
         });
     }
 
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('quality_prediction_details');
+        Schema::dropIfExists('prediction_details');
     }
 };

@@ -10,12 +10,17 @@ class Photo extends Model
     protected $primaryKey = 'idphotos';
     protected $fillable = ['location'];
 
-    public function typePrediction()
+    // A photo can have many predictions
+    public function predictions()
     {
-        return $this->hasOne(TypePrediction::class, 'idphotos');
+        return $this->hasMany(Prediction::class, 'idphotos', 'idphotos');
     }
-    public function qualityPrediction()
+
+    // Convenience relation to get the latest prediction
+    public function latestPrediction()
     {
-        return $this->hasOne(QualityPrediction::class, 'idphotos');
+        // order by created timestamp descending and get one
+        return $this->hasOne(Prediction::class, 'idphotos', 'idphotos')->orderBy('created', 'desc');
     }
+
 }

@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Photo;
-use App\Models\QualityPredictionDetail;
-use App\Models\QualityPrediction;
 use Illuminate\Http\Request;
 
 class PhotoController extends Controller
@@ -14,8 +12,11 @@ class PhotoController extends Controller
      */
     public function index()
     {
-        $photos = Photo::orderBy('idphotos', 'desc')->get();
-        return view('photo.index', compact( 'photos'));
+        $photos = Photo::with(['predictions' => function ($q) {
+            $q->orderBy('created', 'desc')->with('details');
+        }])->orderBy('idphotos', 'desc')->get();
+
+        return view('photo.index', compact('photos'));
     }
 
     /**
@@ -31,8 +32,10 @@ class PhotoController extends Controller
      */
     public function show(string $id)
     {
-        $photo = Photo::findOrFail($id);
-        // Tampilkan data ke view
+        $photo = Photo::with(['predictions' => function ($q) {
+            $q->orderBy('created', 'desc')->with('details');
+        }])->findOrFail($id);
+
         return view('photo.show', compact('photo'));
     }
 

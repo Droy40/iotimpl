@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('quality_predictions', function (Blueprint $table) {
-            $table->id('id_quality_prediction');
+        Schema::create('predictions', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('idphotos');
             $table->timestamp('created');
             $table->text('project');
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('quality_predictions');
+        Schema::dropIfExists('predictions');
     }
 };

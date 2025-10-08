@@ -3,37 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Photo;
-use App\Models\QualityPrediction;
-use App\Models\QualityPredictionDetail;
-use App\Models\TypePrediction;
-use App\Models\TypePredictionDetail;
-use App\Services\AppleQualityPredictionService;
-use App\Services\BananaQualityPredictionService;
-use App\Services\TypePredictionService;
+use App\Models\Prediction;
+use App\Models\PredictionDetail;
+use App\Services\PredictionsService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ApiPhotoController extends Controller
 {
-    protected $typePredictionService;
-    protected $appleQualityPredictionService;
-    protected $bananaQualityPredictionService;
-
-    public function __construct(TypePredictionService $typePredictionService,
-                                AppleQualityPredictionService $appleQualityPredictionService,
-                                BananaQualityPredictionService $bananaQualityPredictionService)
+    public function __construct(protected PredictionsService $predictionsService)
     {
-        $this->typePredictionService = $typePredictionService;
-        $this->appleQualityPredictionService = $appleQualityPredictionService;
-        $this->bananaQualityPredictionService = $bananaQualityPredictionService;
-    }
-
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        return csrf_token();
     }
     /**
      * Store a newly created resource in storage.
@@ -43,99 +24,93 @@ class ApiPhotoController extends Controller
         $request->validate([
             'image' => 'required|image|mimes:jpg,jpeg,png|max:8192',
         ]);
-        if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension(); // Generate nama unik
 
-            // Simpan ke folder public/photos
-            $image->move(public_path('photos'), $imageName);
-
-            // Simpan URL gambar
-            $imagePath = url('photos/' . $imageName);
-            // Simpan data produk ke database
-            $photo = new Photo();
-            $photo->location = $imagePath;
-            $photo->save();
-
-            //Prediksi Type
-            $typeResult = $this->typePredictionService->predict($imagePath);
-
-            //simpan typePrediction ke db
-            $typePrediction = new TypePrediction();
-            $typePrediction->created = Carbon::parse($typeResult['created'])->format('Y-m-d H:i:s');
-            $photo->typePrediction()->save($typePrediction);
-
-            //simpan hasil tag dan prob nya ke db
-            foreach ($typeResult['predictions'] as $result) {
-                $typePredictionDetail = new TypePredictionDetail();
-                $typePredictionDetail->tagName = $result['tagName'];
-                $typePredictionDetail->probability = $result['probability'];
-                $typePrediction->detail()->save($typePredictionDetail);
-            }
-            $highestTypePrediction = $typePrediction->detail()->orderBy('probability', 'desc')->first();
-            //jika prediksi apple tertinggi
-            if($highestTypePrediction->tagName == 'apple'){
-                $qualityResult = $this->appleQualityPredictionService->predict($imagePath);
-            }
-            //jika prediksi banana tertinggi
-            else{
-                $qualityResult = $this->bananaQualityPredictionService->predict($imagePath);
-            }
-
-            $qualityPrediction = new QualityPrediction();
-            $qualityPrediction->created = Carbon::parse($qualityResult['created'])->format('Y-m-d H:i:s');
-            $qualityPrediction->project = $qualityResult['project'];
-            $photo->qualityPrediction()->save($qualityPrediction);
-            foreach ($qualityResult['predictions'] as $result) {
-                $qualityPredictionDetail = new QualityPredictionDetail();
-                $qualityPredictionDetail->tagName = $result['tagName'];
-                $qualityPredictionDetail->probability = $result['probability'];
-                $qualityPrediction->detail()->save($qualityPredictionDetail);
-                unset($result['tagName']);
-            }
-
-            // Kembalikan respon JSON
-            return response()->json([
-                'message' => 'Successfully predicted the image!',
-                'result' => [
-                    'idphotos'=>$photo->idphotos,
-                    'type'=> $highestTypePrediction->tagName,
-                    'probability' => $highestTypePrediction->probability,
-                    'quality' => array_map(function ($prediction)
-                    {
-                        unset($prediction['tagId']);
-                        return $prediction;
-                    }, $qualityResult['predictions'])
-                ]
-            ], 201);
+        if (! $request->hasFile('image')) {
+            return response()->json(['message' => 'Please upload an image!'], 400);
         }
 
-        return response()->json([
-            'message' => 'Please upload an image!'
-        ],400);
+        $image = $request->file('image');
+        $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension(); // Generate nama unik
 
+        // Simpan ke folder public/photos
+        $image->move(public_path('photos'), $imageName);
+
+        // Public URL for clients
+        $publicUrl = url('photos/' . $imageName);
+        // Local filesystem path for reading bytes
+        $localPath = public_path('photos/' . $imageName);
+
+        // Simpan data photo awal
+        $photo = new Photo();
+        $photo->location = $publicUrl;
+        $photo->save();
+
+        try {
+            // Call external prediction service with local file path (safer & faster than URL)
+            $predictionApiResult = $this->predictionsService->predict($localPath);
+
+            // Validate response shape
+            if (!is_array($predictionApiResult) || empty($predictionApiResult['predictions'] ?? null)) {
+                throw new \RuntimeException('Invalid prediction response from external service');
+            }
+
+            // Use DB transaction to ensure prediction + details are stored atomically
+            DB::transaction(function () use ($photo, $predictionApiResult) {
+                $predictionResult = new Prediction();
+                $createdValue = $predictionApiResult['created'] ?? null;
+                try {
+                    $predictionResult->created = $createdValue ? Carbon::parse($createdValue)->format('Y-m-d H:i:s') : Carbon::now()->format('Y-m-d H:i:s');
+                } catch (\Exception $e) {
+                    // fallback to now if parsing fails
+                    $predictionResult->created = Carbon::now()->format('Y-m-d H:i:s');
+                }
+
+                $predictionResult->project = $predictionApiResult['project'] ?? null;
+
+                $photo->predictions()->save($predictionResult);
+
+                $details = $predictionApiResult['predictions'] ?? [];
+                foreach ($details as $result) {
+                    // guard keys
+                    if (!isset($result['tagName']) || !isset($result['probability'])) {
+                        continue; // skip malformed entries
+                    }
+                    $predictionDetail = new PredictionDetail();
+                    $predictionDetail->tagName = $result['tagName'];
+                    $predictionDetail->probability = (float) $result['probability'];
+                    $predictionResult->details()->save($predictionDetail);
+                }
+            });
+
+            // Reload relations to include them in the response
+            $photo->load('predictions.details');
+
+            return response()->json([
+                'message' => 'Successfully predicted the image!',
+                'result' => $photo
+            ], 201);
+
+        } catch (\Exception $e) {
+            // Log the error
+            Log::error('Prediction error: ' . $e->getMessage(), ['exception' => $e]);
+
+            // cleanup: remove the photo record and file if they exist
+            try {
+                if ($photo->exists) {
+                    $photo->delete();
+                }
+            } catch (\Exception $ex) {
+                Log::warning('Failed to delete photo record during cleanup: ' . $ex->getMessage());
+            }
+
+            if (file_exists($localPath)) {
+                @unlink($localPath);
+            }
+
+            return response()->json([
+                'message' => 'Prediction failed: ' . $e->getMessage()
+            ], 500);
+        }
     }
-//
-//    /**
-//     * Display the specified resource.
-//     */
-//    public function show(string $id)
-//    {
-//    }
-//
-//    /**
-//     * Update the specified resource in storage.
-//     */
-//    public function update(Request $request, string $id)
-//    {
-//        //
-//    }
-//
-//    /**
-//     * Remove the specified resource from storage.
-//     */
-//    public function destroy(string $id)
-//    {
-//        //
-//    }
+
 }
