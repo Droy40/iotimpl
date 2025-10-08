@@ -22,7 +22,7 @@ class ApiPhotoController extends Controller
     public function store(Request $request)
     {
         if (!$request->hasFile('image')) {
-            return response()->json([''], 400);
+            return response()->json(['failed'], 400);
         }
 
         $image = $request->file('image');
