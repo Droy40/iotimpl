@@ -21,12 +21,8 @@ class ApiPhotoController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'image' => 'required|image|mimes:jpg,jpeg,png|max:8192',
-        ]);
-
-        if (! $request->hasFile('image')) {
-            return response()->json(['message' => 'Please upload an image!'], 400);
+        if (!$request->hasFile('image')) {
+            return response()->json([''], 400);
         }
 
         $image = $request->file('image');

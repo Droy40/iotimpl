@@ -18,6 +18,7 @@ class Prediction extends Model
 
     public function details()
     {
-        return $this->hasMany(PredictionDetail::class, 'prediction_id', 'id');
+        // Order details by probability descending (largest first)
+        return $this->hasMany(PredictionDetail::class, 'prediction_id', 'id')->orderByDesc('probability');
     }
 }

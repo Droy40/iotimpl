@@ -3,6 +3,11 @@
 @section('content')
 <div class="container mt-5">
     <h1 class="mb-4">Photo Details</h1>
+
+    @if(session('message'))
+        <div class="alert alert-success">{{ session('message') }}</div>
+    @endif
+
     <div class="card">
         <img src="{{ $photo->location }}" class="card-img-top" alt="Photo">
         <div class="card-body">
@@ -24,7 +29,7 @@
                 <p class="text-muted">No detailed predictions available</p>
             @endif
 
-            <a href="{{ route('photo.index') }}" class="btn btn-primary">Back to Photos</a>
+            <a href="{{ route('index') }}" class="btn btn-primary">Back to Photos</a>
         </div>
     </div>
 </div>
