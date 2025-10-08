@@ -9,7 +9,7 @@
     @endif
 
     <div class="card">
-        <img src="{{ $photo->location }}" class="card-img-top" alt="Photo">
+        <img src="{{ $photo->location }}" class="card-img-top" alt="Photo" style="width:100%; height:480px; object-fit:cover; display:block;">
         <div class="card-body">
             <h5 class="card-title">Photo ID: {{ $photo->idphotos }}</h5>
             <p class="card-text">Description: {{ $photo->description ?? '-' }}</p>

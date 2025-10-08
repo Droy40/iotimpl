@@ -10,7 +10,7 @@
             @endphp
             <div class="col" >
                 <div class="card h-100">
-                    <img src={{ $photo->location }} class="card-img-top" alt="Card Image">
+                    <img src="{{ $photo->location }}" class="card-img-top" alt="Card Image" style="width:100%; height:240px; object-fit:cover; display:block;">
                     <div class="card-body">
                         <h5 class="card-title">{{ $prediction ? \Illuminate\Support\Carbon::parse($prediction->created)->format('d M Y H:i') : 'No prediction' }}</h5>
                         <h5 class="card-text">

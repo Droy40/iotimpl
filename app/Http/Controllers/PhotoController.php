@@ -31,7 +31,14 @@ class PhotoController extends Controller
 
         return view('photo.index', compact('photos'));
     }
+    public function show($id)
+    {
+        $photo = Photo::with(['predictions' => function ($q) {
+            $q->orderBy('created', 'desc')->with('details');
+        }])->findOrFail($id);
 
+        return view('photo.show', compact('photo'));
+    }
     /**
      * Show the form for creating a new resource.
      */
@@ -104,7 +111,7 @@ class PhotoController extends Controller
             $photo->load('predictions.details');
 
             // Redirect to the photo show page for web clients
-            return redirect()->route('photo.show', $photo->idphotos)->with('message', 'File uploaded and predicted successfully.');
+            return redirect()->route('show', $photo->idphotos)->with('message', 'File uploaded and predicted successfully.');
 
         } catch (\Exception $e) {
             Log::error('Prediction error: ' . $e->getMessage(), ['exception' => $e]);
@@ -124,17 +131,4 @@ class PhotoController extends Controller
             return redirect()->back()->with('message', 'Prediction failed: ' . $e->getMessage());
         }
     }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        $photo = Photo::with(['predictions' => function ($q) {
-            $q->orderBy('created', 'desc')->with('details');
-        }])->findOrFail($id);
-
-        return view('photo.show', compact('photo'));
-    }
-
 }
